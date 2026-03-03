@@ -1,12 +1,19 @@
 import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { NotificationsComponent } from './shared/components/notifications.component';
+import { ConfirmDialogComponent } from './shared/components/confirm-dialog.component';
 
 @Component({
-  selector: 'app-root',
-  imports: [RouterOutlet],
-  templateUrl: './app.html',
-  styleUrl: './app.scss'
+    selector: 'app-root',
+    standalone: true,
+    imports: [RouterOutlet, RouterLink, RouterLinkActive, NotificationsComponent, ConfirmDialogComponent],
+    templateUrl: './app.html',
+    styleUrls: ['./app.scss']
 })
 export class App {
-  protected readonly title = signal('vendors');
+    readonly title = signal('vendors');
+
 }
+
+
+

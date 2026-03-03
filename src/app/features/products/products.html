@@ -1,0 +1,49 @@
+<h2>Mes produits</h2>
+
+<p *ngIf="products.length === 0" class="empty-state">
+  <strong>Aucun produit actuellement.</strong><br/>
+  <a routerLink="/seller/product/new" class="link">Ajouter votre premier produit</a>
+</p>
+
+<div *ngIf="products.length > 0" class="products-section">
+  <div class="products-header">
+    <p class="product-count">{{ products.length }} produit(s)</p>
+    <a routerLink="/seller/product/new" class="btn btn-primary-link">+ Ajouter un produit</a>
+  </div>
+
+  <div class="products-grid">
+    <div *ngFor="let p of products" class="product-card">
+      <div class="product-image" *ngIf="p.image">
+        <img [src]="p.image" [alt]="p.name" />
+      </div>
+      
+      <div class="product-info">
+        <h3 class="product-name">{{ p.name }}</h3>
+        <p class="product-category">{{ p.category }}</p>
+        <p class="product-description">{{ p.description }}</p>
+        
+        <div class="product-stats">
+          <div class="stat">
+            <span class="stat-label">Prix :</span>
+            <span class="stat-value">{{ p.price }} €</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Stock :</span>
+            <span class="stat-value" [ngClass]="p.stock > 0 ? 'in-stock' : 'out-of-stock'">
+              {{ p.stock }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="product-actions">
+        <a [routerLink]="['/seller/product', p.id, 'edit']" class="btn btn-secondary">
+          ✎ Modifier
+        </a>
+        <button (click)="delete(p.id, p.name)" class="btn btn-danger">
+          🗑 Supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
