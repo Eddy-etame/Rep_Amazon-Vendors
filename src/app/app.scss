@@ -1,0 +1,26 @@
+:host {
+  display: block;
+}
+
+.links a {
+  position: relative;
+  padding-bottom: 0.1rem;
+}
+
+.links a::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.2rem;
+  height: 2px;
+  transform: scaleX(0);
+  transform-origin: center;
+  background: var(--amaz-accent);
+  transition: transform 0.2s ease;
+}
+
+.links a.active::after,
+.links a:hover::after {
+  transform: scaleX(1);
+}

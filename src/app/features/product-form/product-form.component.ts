@@ -4,7 +4,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { ActivatedRoute, Router } from '@angular/router';
 import { VendorProductService } from '../../core/services/vendor-product.service';
 import { NotificationService } from '../../core/services/notification.service';
-import { Product } from '../../core/models/product.model';
+import { Product, ProductStatus } from '../../core/models/product.model';
 
 @Component({
   selector: 'app-product-form',
@@ -19,6 +19,7 @@ export class ProductFormComponent implements OnInit {
   isEditMode = false;
   submitted = false;
   imagePreview: string | null = null;
+  readonly statusOptions: ProductStatus[] = ['published', 'draft', 'archived'];
 
   constructor(
     private fb: FormBuilder,
@@ -42,11 +43,15 @@ export class ProductFormComponent implements OnInit {
 
   private initForm(): void {
     this.form = this.fb.group({
+      sku: [''],
       name: ['', [Validators.required]],
       price: [null, [Validators.required, Validators.min(0.01)]],
       stock: [0, [Validators.required, Validators.min(0)]],
+      lowStockThreshold: [5, [Validators.required, Validators.min(0)]],
       category: ['', [Validators.required]],
+      status: ['published', [Validators.required]],
       image: [''],
+      gallery: [''],
       description: ['']
     });
   }
@@ -58,11 +63,15 @@ export class ProductFormComponent implements OnInit {
       return;
     }
     this.form.patchValue({
+      sku: p.sku,
       name: p.name,
       price: p.price,
       stock: p.stock,
+      lowStockThreshold: p.lowStockThreshold,
       category: p.category,
+      status: p.status,
       image: p.image ?? '',
+      gallery: (p.gallery ?? []).join('\n'),
       description: p.description ?? ''
     });
     this.imagePreview = p.image ?? null;
@@ -98,18 +107,35 @@ export class ProductFormComponent implements OnInit {
     this.form.patchValue({ image: '' });
   }
 
+  applyImageUrl(): void {
+    const url = String(this.f['image'].value ?? '').trim();
+    this.imagePreview = url || null;
+  }
+
+  private parseGallery(raw: string): string[] {
+    if (!raw.trim()) {
+      return [];
+    }
+    return [...new Set(raw.split(/\r?\n|,/).map((v) => v.trim()).filter(Boolean))];
+  }
+
   onSubmit(): void {
     this.submitted = true;
     if (this.form.invalid) return;
 
+    const gallery = this.parseGallery(String(this.f['gallery'].value || ''));
     const payload = {
+      sku: String(this.f['sku'].value || '').trim(),
       name: String(this.f['name'].value).trim(),
       price: Number(this.f['price'].value),
       stock: Number(this.f['stock'].value),
+      lowStockThreshold: Number(this.f['lowStockThreshold'].value),
       category: String(this.f['category'].value).trim(),
+      status: String(this.f['status'].value || 'published') as ProductStatus,
       image: (this.f['image'].value || '').trim(),
+      gallery,
       description: (this.f['description'].value || '').trim()
-    } as Omit<Product, 'id'>;
+    } as Omit<Product, 'id' | 'createdAt' | 'updatedAt'>;
 
     if (this.isEditMode && this.productId !== null) {
       this.vendorProductService.update(this.productId, payload);

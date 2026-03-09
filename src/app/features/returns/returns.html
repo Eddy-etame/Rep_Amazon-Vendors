@@ -1,0 +1,77 @@
+<section class="returns-page">
+  <header class="returns-header">
+    <h2>Demandes de retour</h2>
+    <p>Analysez les motifs et mettez à jour le traitement des retours.</p>
+  </header>
+
+  <div class="returns-filters">
+    <input
+      type="search"
+      [(ngModel)]="searchQuery"
+      placeholder="Rechercher retour, commande, client..."
+    />
+    <select [(ngModel)]="statusFilter">
+      <option value="all">Tous statuts</option>
+      <option value="open">Ouvert</option>
+      <option value="approved">Approuvé</option>
+      <option value="rejected">Rejeté</option>
+      <option value="received">Reçu</option>
+      <option value="refunded">Remboursé</option>
+    </select>
+  </div>
+
+  <div class="returns-layout" *ngIf="filteredRequests.length > 0; else noReturns">
+    <aside class="returns-list">
+      <button
+        type="button"
+        class="return-item"
+        *ngFor="let req of filteredRequests"
+        [class.selected]="req.id === selectedRequestId"
+        (click)="selectRequest(req.id)"
+      >
+        <div class="return-top">
+          <strong>{{ req.id }}</strong>
+          <span class="status" [ngClass]="req.status">{{ req.status }}</span>
+        </div>
+        <p>Commande: {{ req.orderId }}</p>
+        <p>Client: {{ req.userName }}</p>
+      </button>
+    </aside>
+
+    <section class="return-detail" *ngIf="selectedRequest as req">
+      <header class="detail-top">
+        <h3>{{ req.id }}</h3>
+        <span class="status" [ngClass]="req.status">{{ req.status }}</span>
+      </header>
+
+      <div class="meta-grid">
+        <p><strong>Commande:</strong> {{ req.orderId }}</p>
+        <p><strong>Client:</strong> {{ req.userName }}</p>
+        <p><strong>Date demande:</strong> {{ formatDate(req.createdAt) }}</p>
+        <p><strong>Référence QR:</strong> {{ req.qrReference }}</p>
+      </div>
+
+      <h4>Motif</h4>
+      <p class="reason">{{ req.reason }}</p>
+
+      <h4>Articles concernés</h4>
+      <ul class="items">
+        <li *ngFor="let item of req.items">
+          <span>{{ item.productName }}</span>
+          <strong>x{{ item.quantity }}</strong>
+        </li>
+      </ul>
+
+      <div class="status-actions">
+        <button type="button" (click)="updateRequestStatus('approved')">Approuver</button>
+        <button type="button" (click)="updateRequestStatus('rejected')">Rejeter</button>
+        <button type="button" (click)="updateRequestStatus('received')">Colis reçu</button>
+        <button type="button" (click)="updateRequestStatus('refunded')">Remboursé</button>
+      </div>
+    </section>
+  </div>
+
+  <ng-template #noReturns>
+    <p class="empty">Aucune demande de retour pour les filtres sélectionnés.</p>
+  </ng-template>
+</section>

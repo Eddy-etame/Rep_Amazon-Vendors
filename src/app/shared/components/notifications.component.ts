@@ -10,8 +10,7 @@ import { NotificationService, Notification } from '../../core/services/notificat
     <div class="notifications-container">
       <div *ngFor="let notif of notifications" 
            class="notification" 
-           [ngClass]="'notification-' + notif.type"
-           [@slideIn]>
+           [ngClass]="'notification-' + notif.type">
         {{ notif.message }}
       </div>
     </div>
@@ -30,11 +29,12 @@ import { NotificationService, Notification } from '../../core/services/notificat
 
     .notification {
       padding: 12px 16px;
-      border-radius: 4px;
+      border-radius: 10px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
       animation: slideInRight 0.3s;
       font-size: 14px;
       font-weight: 500;
+      border: 1px solid rgba(148, 163, 184, 0.4);
     }
 
     @keyframes slideInRight {
@@ -43,27 +43,27 @@ import { NotificationService, Notification } from '../../core/services/notificat
     }
 
     .notification-success {
-      background: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
+      background: rgba(22, 163, 74, 0.15);
+      color: #86efac;
+      border-color: rgba(22, 163, 74, 0.4);
     }
 
     .notification-error {
-      background: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
+      background: rgba(220, 38, 38, 0.15);
+      color: #fca5a5;
+      border-color: rgba(220, 38, 38, 0.4);
     }
 
     .notification-warning {
-      background: #fff3cd;
-      color: #856404;
-      border: 1px solid #ffeeba;
+      background: rgba(234, 179, 8, 0.14);
+      color: #fde68a;
+      border-color: rgba(234, 179, 8, 0.4);
     }
 
     .notification-info {
-      background: #d1ecf1;
-      color: #0c5460;
-      border: 1px solid #bee5eb;
+      background: rgba(249, 115, 22, 0.14);
+      color: #fdba74;
+      border-color: rgba(249, 115, 22, 0.4);
     }
   `]
 })

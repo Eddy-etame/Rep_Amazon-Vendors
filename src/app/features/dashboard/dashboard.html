@@ -1,1 +1,54 @@
-<p>dashboard works!</p>
+<section class="dashboard-page">
+  <header class="dashboard-header">
+    <h1>Tableau de bord vendeur</h1>
+    <p>Suivi rapide de votre activité boutique et des actions prioritaires.</p>
+  </header>
+
+  <div class="kpi-grid">
+    <article class="kpi-card">
+      <p class="kpi-label">Produits actifs</p>
+      <p class="kpi-value">{{ activeProductsCount }}</p>
+    </article>
+    <article class="kpi-card warning">
+      <p class="kpi-label">Stock faible</p>
+      <p class="kpi-value">{{ lowStockCount }}</p>
+    </article>
+    <article class="kpi-card">
+      <p class="kpi-label">Messages non lus</p>
+      <p class="kpi-value">{{ unreadMessagesCount }}</p>
+    </article>
+    <article class="kpi-card">
+      <p class="kpi-label">Commandes en cours</p>
+      <p class="kpi-value">{{ pendingOrdersCount }}</p>
+    </article>
+    <article class="kpi-card">
+      <p class="kpi-label">Retours ouverts</p>
+      <p class="kpi-value">{{ openReturns }}</p>
+    </article>
+  </div>
+
+  <section class="dashboard-row">
+    <article class="panel">
+      <h2>Actions rapides</h2>
+      <div class="quick-actions">
+        <a routerLink="/seller/product/new" class="qa-btn">Ajouter un produit</a>
+        <a routerLink="/seller/products" class="qa-btn">Gérer le catalogue</a>
+        <a routerLink="/seller/orders" class="qa-btn">Voir les commandes</a>
+        <a routerLink="/seller/returns" class="qa-btn">Traiter les retours</a>
+        <a routerLink="/seller/messages" class="qa-btn">Ouvrir la messagerie</a>
+      </div>
+    </article>
+
+    <article class="panel">
+      <h2>Santé du catalogue</h2>
+      <ul class="health-list">
+        <li>Images manquantes: <strong>{{ missingImageCount }}</strong></li>
+        <li>Descriptions trop courtes: <strong>{{ weakDescriptionCount }}</strong></li>
+        <li>Produits en rupture: <strong>{{ outOfStockCount }}</strong></li>
+      </ul>
+      <p class="health-summary">
+        Total points à corriger: <strong>{{ healthIssuesCount }}</strong>
+      </p>
+    </article>
+  </section>
+</section>
