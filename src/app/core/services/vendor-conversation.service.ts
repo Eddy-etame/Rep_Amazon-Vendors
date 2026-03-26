@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 
 import { ConversationMessage, VendorConversation } from '../models/conversation.model';
+import { VendorSessionStore } from './vendor-session.store';
 
 const KEY = 'vendor_conversations';
-const VENDOR_ID = 'vendor_demo_01';
-const VENDOR_NAME = 'Amaz Vendor';
+const FALLBACK_VENDOR_ID = 'vendor_demo_01';
+const FALLBACK_VENDOR_NAME = 'Amaz Vendor';
 
 export interface IncomingUserMessageInput {
   conversationId?: string;
@@ -37,6 +38,16 @@ export interface IncomingSocketMessage {
 
 @Injectable({ providedIn: 'root' })
 export class VendorConversationService {
+  constructor(private readonly vendorSession: VendorSessionStore) {}
+
+  private get vendorId(): string {
+    return this.vendorSession.vendorId || FALLBACK_VENDOR_ID;
+  }
+
+  private get vendorName(): string {
+    return this.vendorSession.vendorName || FALLBACK_VENDOR_NAME;
+  }
+
   private read(): VendorConversation[] {
     const raw = localStorage.getItem(KEY);
     if (!raw) {
@@ -61,19 +72,21 @@ export class VendorConversationService {
     return `conv_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
   }
 
-  seedIfEmpty(): void {
+  seedIfEmpty(vendorIdOverride?: string, vendorNameOverride?: string): void {
     if (this.read().length > 0) {
       return;
     }
 
+    const vId = vendorIdOverride ?? this.vendorId;
+    const vName = vendorNameOverride ?? this.vendorName;
     const now = Date.now();
     const seeded: VendorConversation[] = [
       {
         id: `conv_seed_${now}`,
         userId: 'usr_amy_001',
         userName: 'Amy',
-        vendorId: VENDOR_ID,
-        vendorName: VENDOR_NAME,
+        vendorId: vId,
+        vendorName: vName,
         subject: 'Question sur la livraison',
         orderId: 'cmd-1036',
         productId: 'prd-casque-01',
@@ -91,8 +104,8 @@ export class VendorConversationService {
           },
           {
             id: `msg_seed_${now}_2`,
-            senderId: VENDOR_ID,
-            senderName: VENDOR_NAME,
+            senderId: vId,
+            senderName: vName,
             senderRole: 'vendor',
             content: 'Bonjour Amy, livraison prévue entre 3 et 5 jours ouvrés.',
             sentAt: new Date(now - 1000 * 60 * 20).toISOString(),
@@ -104,8 +117,8 @@ export class VendorConversationService {
         id: `conv_seed_${now + 1}`,
         userId: 'usr_lina_002',
         userName: 'Lina',
-        vendorId: VENDOR_ID,
-        vendorName: VENDOR_NAME,
+        vendorId: vId,
+        vendorName: vName,
         subject: 'Compatibilité produit',
         productId: 'prd-watch-02',
         productTitle: 'Montre Connectée Sport',
@@ -173,8 +186,8 @@ export class VendorConversationService {
 
     const message: ConversationMessage = {
       id: this.buildMessageId(),
-      senderId: VENDOR_ID,
-      senderName: VENDOR_NAME,
+      senderId: this.vendorId,
+      senderName: this.vendorName,
       senderRole: 'vendor',
       content: trimmed,
       sentAt: new Date().toISOString(),
@@ -224,8 +237,8 @@ export class VendorConversationService {
       id: this.buildConversationId(),
       userId: input.userId,
       userName: input.userName,
-      vendorId: VENDOR_ID,
-      vendorName: VENDOR_NAME,
+      vendorId: this.vendorId,
+      vendorName: this.vendorName,
       subject: input.subject,
       productId: input.productId,
       productTitle: input.productTitle,
@@ -280,8 +293,8 @@ export class VendorConversationService {
       id: conversationId,
       userId: payload.userId,
       userName: payload.userName,
-      vendorId: payload.vendorId ?? VENDOR_ID,
-      vendorName: payload.vendorName ?? VENDOR_NAME,
+      vendorId: payload.vendorId ?? this.vendorId,
+      vendorName: payload.vendorName ?? this.vendorName,
       subject: payload.subject,
       productId: payload.productId,
       productTitle: payload.productTitle,

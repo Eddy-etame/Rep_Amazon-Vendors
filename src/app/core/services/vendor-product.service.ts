@@ -1,7 +1,10 @@
-import { Injectable } from '@angular/core';
-import { Product, ProductStatus } from '../models/product.model';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 
-const KEY = 'vendor_products';
+import { environment } from '../../../environments/environment';
+import { Product, ProductStatus } from '../models/product.model';
+import { VendorSessionStore } from './vendor-session.store';
 
 export interface VendorProductFilters {
   q?: string;
@@ -13,75 +16,126 @@ export interface VendorProductFilters {
 
 @Injectable({ providedIn: 'root' })
 export class VendorProductService {
-  private normalize(raw: Partial<Product>, index = 0): Product {
-    const now = Date.now();
-    const id = typeof raw.id === 'number' ? raw.id : now + index;
-    const fallbackName = typeof raw.name === 'string' && raw.name.trim() ? raw.name.trim() : 'Produit sans nom';
-    const sku = typeof raw.sku === 'string' && raw.sku.trim() ? raw.sku.trim() : `SKU-${id}`;
-    const image = typeof raw.image === 'string' ? raw.image : '';
-    const galleryInput = Array.isArray(raw.gallery) ? raw.gallery : [];
-    const gallery = [...new Set(galleryInput.filter((g): g is string => typeof g === 'string' && g.trim() !== ''))];
-    const statusRaw = raw.status;
+  private readonly http = inject(HttpClient);
+  private readonly session = inject(VendorSessionStore);
+  private cache: Product[] = [];
+  private readonly base = environment.apiBaseUrl.replace(/\/+$/, '');
+
+  /** Phase 2: catalog is API-backed; local seed removed */
+  seedIfEmpty(): void {
+    /* no-op */
+  }
+
+  private parseTs(iso: string | Date | undefined): number {
+    if (iso instanceof Date) return iso.getTime();
+    if (!iso) return Date.now();
+    const t = Date.parse(String(iso));
+    return Number.isFinite(t) ? t : Date.now();
+  }
+
+  private mapApiToProduct(raw: Record<string, unknown>): Product {
+    const statusRaw = raw['status'];
     const status: ProductStatus =
       statusRaw === 'draft' || statusRaw === 'archived' || statusRaw === 'published' ? statusRaw : 'published';
-    const createdAt = typeof raw.createdAt === 'number' ? raw.createdAt : now;
-    const updatedAt = typeof raw.updatedAt === 'number' ? raw.updatedAt : now;
-
+    const galleryInput = raw['gallery'];
+    const gallery = Array.isArray(galleryInput)
+      ? [...new Set(galleryInput.filter((g): g is string => typeof g === 'string' && g.trim() !== ''))]
+      : [];
     return {
-      id,
-      sku,
-      name: fallbackName,
-      price: typeof raw.price === 'number' ? raw.price : 0,
-      description: typeof raw.description === 'string' ? raw.description : '',
-      image,
+      id: String(raw['id'] ?? ''),
+      sku: String(raw['sku'] ?? ''),
+      name: String(raw['title'] ?? raw['titre'] ?? 'Produit sans nom'),
+      price: Number(raw['price'] ?? raw['prix'] ?? 0),
+      description: String(raw['description'] ?? ''),
+      image: String(raw['image'] ?? raw['imagePrincipale'] ?? ''),
       gallery,
-      stock: typeof raw.stock === 'number' ? raw.stock : 0,
-      lowStockThreshold: typeof raw.lowStockThreshold === 'number' ? raw.lowStockThreshold : 5,
-      category: typeof raw.category === 'string' ? raw.category : 'Divers',
+      stock: Number(raw['stock'] ?? 0),
+      lowStockThreshold: Number(raw['lowStockThreshold'] ?? 5),
+      category: String(raw['category'] ?? raw['categorie'] ?? 'Divers'),
       status,
-      createdAt,
-      updatedAt
+      createdAt: this.parseTs(raw['createdAt'] as string | undefined),
+      updatedAt: this.parseTs(raw['updatedAt'] as string | undefined)
     };
   }
 
-  private buildSku(name: string): string {
-    const slug = name
-      .toUpperCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^A-Z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .slice(0, 14);
-    return `SKU-${slug || 'PROD'}-${Math.floor(Math.random() * 9000 + 1000)}`;
+  private toCreateBody(data: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Record<string, unknown> {
+    return {
+      title: data.name,
+      price: data.price,
+      description: data.description,
+      shortDescription: data.description.slice(0, 500),
+      detailedDescription: data.description,
+      category: data.category,
+      city: '',
+      stock: data.stock,
+      sku: data.sku,
+      lowStockThreshold: data.lowStockThreshold,
+      image: data.image,
+      gallery: data.gallery,
+      status: data.status
+    };
   }
 
-  private read(): Product[] {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) {
+  private apiErrorMessage(err: unknown): string {
+    if (err instanceof HttpErrorResponse) {
+      const body = err.error as { error?: { message?: string; code?: string } };
+      return body?.error?.message || err.message || 'Erreur réseau';
+    }
+    return 'Erreur inattendue';
+  }
+
+  async loadAll(): Promise<Product[]> {
+    const vendorId = this.session.vendorId;
+    if (!vendorId) {
+      this.cache = [];
       return [];
     }
+    const params = new HttpParams()
+      .set('vendorId', vendorId)
+      .set('limit', '500')
+      .set('page', '1')
+      .set('status', 'all');
+
     try {
-      const parsed = JSON.parse(raw) as Partial<Product>[];
-      return parsed.map((entry, index) => this.normalize(entry, index));
-    } catch {
-      return [];
+      const res = await firstValueFrom(
+        this.http.get<{ success: boolean; data?: { items: Record<string, unknown>[] } }>(
+          `${this.base}/produits`,
+          { params }
+        )
+      );
+      const items = res?.data?.items ?? [];
+      this.cache = items.map((i) => this.mapApiToProduct(i));
+      return this.cache;
+    } catch (e) {
+      this.cache = [];
+      throw new Error(this.apiErrorMessage(e));
     }
-  }
-
-  private write(products: Product[]): void {
-    localStorage.setItem(KEY, JSON.stringify(products));
   }
 
   getAll(): Product[] {
-    return this.read();
+    return [...this.cache];
   }
 
-  getById(id: number): Product | undefined {
-    return this.read().find(p => p.id === id);
+  getById(id: string): Product | undefined {
+    return this.cache.find((p) => p.id === id);
+  }
+
+  async fetchOne(id: string): Promise<Product | undefined> {
+    try {
+      const res = await firstValueFrom(
+        this.http.get<{ success: boolean; data?: Record<string, unknown> }>(
+          `${this.base}/produits/${encodeURIComponent(id)}`
+        )
+      );
+      if (!res?.success || !res.data) return undefined;
+      return this.mapApiToProduct(res.data);
+    } catch {
+      return undefined;
+    }
   }
 
   listCategories(): string[] {
-    return [...new Set(this.read().map((p) => p.category))].sort((a, b) => a.localeCompare(b));
+    return [...new Set(this.cache.map((p) => p.category))].sort((a, b) => a.localeCompare(b));
   }
 
   getFiltered(filters: VendorProductFilters = {}): Product[] {
@@ -91,7 +145,7 @@ export class VendorProductService {
     const stock = filters.stock ?? 'all';
     const sort = filters.sort ?? 'recent';
 
-    let items = this.read().filter((p) => {
+    let items = this.cache.filter((p) => {
       const matchQ =
         !q ||
         p.name.toLowerCase().includes(q) ||
@@ -126,167 +180,95 @@ export class VendorProductService {
     return items;
   }
 
-  create(data: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Product {
-    const products = this.read();
-    const now = Date.now();
-    const newProduct: Product = this.normalize({
-      ...data,
-      id: now,
-      createdAt: now,
-      updatedAt: now,
-      sku: data.sku?.trim() ? data.sku : this.buildSku(data.name)
-    });
-    products.unshift(newProduct);
-    this.write(products);
-    return newProduct;
+  async create(data: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<Product> {
+    const body = this.toCreateBody(data);
+    try {
+      const res = await firstValueFrom(
+        this.http.post<{ success: boolean; data?: Record<string, unknown> }>(`${this.base}/produits`, body)
+      );
+      if (!res?.success || !res.data) {
+        throw new Error('Réponse invalide du serveur');
+      }
+      const p = this.mapApiToProduct(res.data);
+      this.cache.unshift(p);
+      return p;
+    } catch (e) {
+      throw new Error(this.apiErrorMessage(e));
+    }
   }
 
-  update(id: number, data: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Product | undefined {
-    const products = this.read();
-    const idx = products.findIndex(p => p.id === id);
-    if (idx === -1) return undefined;
-    products[idx] = this.normalize({
-      ...products[idx],
-      ...data,
-      id,
-      createdAt: products[idx].createdAt,
-      updatedAt: Date.now()
-    });
-    this.write(products);
-    return products[idx];
+  async update(id: string, data: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<Product | undefined> {
+    const body = this.toCreateBody(data);
+    try {
+      const res = await firstValueFrom(
+        this.http.put<{ success: boolean; data?: Record<string, unknown> }>(
+          `${this.base}/produits/${encodeURIComponent(id)}`,
+          body
+        )
+      );
+      if (!res?.success || !res.data) return undefined;
+      const p = this.mapApiToProduct(res.data);
+      const idx = this.cache.findIndex((x) => x.id === id);
+      if (idx >= 0) this.cache[idx] = p;
+      return p;
+    } catch (e) {
+      throw new Error(this.apiErrorMessage(e));
+    }
   }
 
-  remove(id: number): void {
-    const products = this.read().filter(p => p.id !== id);
-    this.write(products);
+  /** Partial update (e.g. bulk status or stock) */
+  async patch(id: string, patch: Record<string, unknown>): Promise<Product | undefined> {
+    try {
+      const res = await firstValueFrom(
+        this.http.put<{ success: boolean; data?: Record<string, unknown> }>(
+          `${this.base}/produits/${encodeURIComponent(id)}`,
+          patch
+        )
+      );
+      if (!res?.success || !res.data) return undefined;
+      const p = this.mapApiToProduct(res.data);
+      const idx = this.cache.findIndex((x) => x.id === id);
+      if (idx >= 0) this.cache[idx] = p;
+      return p;
+    } catch (e) {
+      throw new Error(this.apiErrorMessage(e));
+    }
   }
 
-  updateStatus(ids: number[], status: ProductStatus): void {
+  async remove(id: string): Promise<void> {
+    try {
+      await firstValueFrom(this.http.delete(`${this.base}/produits/${encodeURIComponent(id)}`));
+      this.cache = this.cache.filter((p) => p.id !== id);
+    } catch (e) {
+      throw new Error(this.apiErrorMessage(e));
+    }
+  }
+
+  async updateStatus(ids: string[], status: ProductStatus): Promise<void> {
     if (!ids.length) return;
-    const idSet = new Set(ids);
-    const products = this.read().map((p) =>
-      idSet.has(p.id) ? { ...p, status, updatedAt: Date.now() } : p
-    );
-    this.write(products);
+    await Promise.all(ids.map((id) => this.patch(id, { status })));
   }
 
-  adjustStock(ids: number[], delta: number): void {
+  async adjustStock(ids: string[], delta: number): Promise<void> {
     if (!ids.length || !delta) return;
-    const idSet = new Set(ids);
-    const products = this.read().map((p) =>
-      idSet.has(p.id)
-        ? { ...p, stock: Math.max(0, p.stock + delta), updatedAt: Date.now() }
-        : p
+    await Promise.all(
+      ids.map((id) => {
+        const p = this.cache.find((x) => x.id === id);
+        const next = Math.max(0, (p?.stock ?? 0) + delta);
+        return this.patch(id, { stock: next });
+      })
     );
-    this.write(products);
   }
 
-  adjustPricePercent(ids: number[], percent: number): void {
+  async adjustPricePercent(ids: string[], percent: number): Promise<void> {
     if (!ids.length || !percent) return;
     const factor = 1 + percent / 100;
-    const idSet = new Set(ids);
-    const products = this.read().map((p) =>
-      idSet.has(p.id)
-        ? { ...p, price: Math.max(0.01, Number((p.price * factor).toFixed(2))), updatedAt: Date.now() }
-        : p
-    );
-    this.write(products);
-  }
-
-  seedIfEmpty(): void {
-    if (this.read().length) return;
-    const now = Date.now();
-    this.write([
-      this.normalize({
-        id: now,
-        sku: 'SKU-CASQUE-1001',
-        name: 'Casque Bluetooth Premium',
-        price: 89.99,
-        description: 'Casque sans fil haute qualité avec réduction de bruit active, batterie 30h, son cristallin.',
-        image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop',
-        gallery: [
-          'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=1280',
-          'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=1280'
-        ],
-        stock: 15,
-        lowStockThreshold: 5,
-        category: 'Électronique',
-        status: 'published',
-        createdAt: now,
-        updatedAt: now
-      }),
-      this.normalize({
-        id: now + 1,
-        sku: 'SKU-MONTRE-1002',
-        name: 'Montre Connectée Sport',
-        price: 199.99,
-        description: 'Montre intelligente avec suivi cardiaque, GPS, écran AMOLED, résistante à l\'eau.',
-        image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop',
-        gallery: [
-          'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=1280',
-          'https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?w=1280'
-        ],
-        stock: 8,
-        lowStockThreshold: 4,
-        category: 'Électronique',
-        status: 'published',
-        createdAt: now,
-        updatedAt: now
-      }),
-      this.normalize({
-        id: now + 2,
-        sku: 'SKU-SAC-1003',
-        name: 'Sac à Dos Urban',
-        price: 49.99,
-        description: 'Sac à dos ergonomique avec compartiments, port USB, design moderne et durable.',
-        image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=400&fit=crop',
-        gallery: [
-          'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=1280',
-          'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=1280'
-        ],
-        stock: 25,
-        lowStockThreshold: 6,
-        category: 'Accessoires',
-        status: 'published',
-        createdAt: now,
-        updatedAt: now
-      }),
-      this.normalize({
-        id: now + 3,
-        sku: 'SKU-LAMPE-1004',
-        name: 'Lampe LED Ambiance',
-        price: 34.99,
-        description: '16 millions de couleurs, compatible Alexa, minuteur programmable, économe en énergie.',
-        image: 'https://images.unsplash.com/photo-1565636192335-14a0f4cfbaeb?w=400&h=400&fit=crop',
-        gallery: [
-          'https://images.unsplash.com/photo-1565636192335-14a0f4cfbaeb?w=1280',
-          'https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=1280'
-        ],
-        stock: 12,
-        lowStockThreshold: 3,
-        category: 'Maison',
-        status: 'published',
-        createdAt: now,
-        updatedAt: now
-      }),
-      this.normalize({
-        id: now + 4,
-        sku: 'SKU-BATTERY-1005',
-        name: 'Batterie Externe 30000mAh',
-        price: 39.99,
-        description: 'Charge rapide 65W, 3 ports USB-C, écran LED, compatible tous téléphones.',
-        image: 'https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=400&h=400&fit=crop',
-        gallery: [
-          'https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=1280',
-          'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=1280'
-        ],
-        stock: 20,
-        lowStockThreshold: 5,
-        category: 'Accessoires',
-        status: 'draft',
-        createdAt: now,
-        updatedAt: now
+    await Promise.all(
+      ids.map((id) => {
+        const p = this.cache.find((x) => x.id === id);
+        const next = Math.max(0.01, Number(((p?.price ?? 0) * factor).toFixed(2)));
+        return this.patch(id, { price: next });
       })
-    ]);
+    );
   }
 }

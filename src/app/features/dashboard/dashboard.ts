@@ -7,6 +7,7 @@ import { VendorConversationService } from '../../core/services/vendor-conversati
 import { VendorOrdersService } from '../../core/services/vendor-orders.service';
 import { VendorProductService } from '../../core/services/vendor-product.service';
 import { VendorReturnsService } from '../../core/services/vendor-returns.service';
+import { VendorSessionStore } from '../../core/services/vendor-session.store';
 
 @Component({
   selector: 'app-dashboard',
@@ -24,15 +25,24 @@ export class Dashboard implements OnInit {
     private readonly productService: VendorProductService,
     private readonly conversationService: VendorConversationService,
     private readonly ordersService: VendorOrdersService,
-    private readonly returnsService: VendorReturnsService
+    private readonly returnsService: VendorReturnsService,
+    private readonly vendorSession: VendorSessionStore
   ) {}
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
+    await this.vendorSession.load();
     this.productService.seedIfEmpty();
     this.conversationService.seedIfEmpty();
     this.ordersService.seedIfEmpty();
     this.returnsService.seedIfEmpty();
+
+    try {
+      await this.productService.loadAll();
+    } catch {
+      /* dashboard still shows other widgets */
+    }
     this.products = this.productService.getAll();
+
     this.pendingOrders = this.ordersService
       .getAll()
       .filter((order) => ['confirmed', 'preparing', 'shipped'].includes(order.status)).length;
@@ -42,13 +52,13 @@ export class Dashboard implements OnInit {
   }
 
   get activeProductsCount(): number {
-    return this.products.filter((p) => (p as { status?: string }).status !== 'archived').length;
+    return this.products.filter((p) => p.status !== 'archived').length;
   }
 
   get lowStockCount(): number {
     return this.products.filter((p) => {
-      const threshold = (p as { lowStockThreshold?: number }).lowStockThreshold ?? 5;
-      return p.stock <= threshold;
+      const threshold = p.lowStockThreshold ?? 5;
+      return p.stock > 0 && p.stock <= threshold;
     }).length;
   }
 

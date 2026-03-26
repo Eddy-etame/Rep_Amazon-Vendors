@@ -6,17 +6,19 @@ import { ConfirmDialogService } from '../../core/services/confirm-dialog.service
 import { NotificationService } from '../../core/services/notification.service';
 import { FormsModule } from '@angular/forms';
 import { Product, ProductStatus } from '../../core/models/product.model';
+import { VendorSessionStore } from '../../core/services/vendor-session.store';
 
 @Component({
   selector: 'app-products',
   standalone: true,
   imports: [CommonModule, RouterLink, FormsModule],
   templateUrl: './products.html',
-  styleUrls: ['./products.scss'],
+  styleUrls: ['./products.scss']
 })
 export class Products implements OnInit {
   products: Product[] = [];
   categories: string[] = [];
+  loading = false;
 
   searchQuery = '';
   statusFilter: ProductStatus | 'all' = 'all';
@@ -24,17 +26,31 @@ export class Products implements OnInit {
   categoryFilter = '';
   sortBy: 'recent' | 'price_asc' | 'price_desc' | 'stock_asc' | 'stock_desc' | 'name_asc' = 'recent';
 
-  selectedIds = new Set<number>();
+  selectedIds = new Set<string>();
 
   constructor(
     private vendorProductService: VendorProductService,
     private confirmDialog: ConfirmDialogService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private vendorSession: VendorSessionStore
   ) {}
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     this.vendorProductService.seedIfEmpty();
-    this.categories = this.vendorProductService.listCategories();
+    await this.vendorSession.load();
+    await this.reloadFromApi();
+  }
+
+  private async reloadFromApi(): Promise<void> {
+    this.loading = true;
+    try {
+      await this.vendorProductService.loadAll();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Impossible de charger le catalogue';
+      this.notificationService.error(msg);
+    } finally {
+      this.loading = false;
+    }
     this.refresh();
   }
 
@@ -62,11 +78,11 @@ export class Products implements OnInit {
     return product.stock > 0 && product.stock <= product.lowStockThreshold;
   }
 
-  isSelected(productId: number): boolean {
+  isSelected(productId: string): boolean {
     return this.selectedIds.has(productId);
   }
 
-  toggleSelectOne(productId: number, checked: boolean): void {
+  toggleSelectOne(productId: string, checked: boolean): void {
     if (checked) {
       this.selectedIds.add(productId);
     } else {
@@ -86,38 +102,67 @@ export class Products implements OnInit {
     this.selectedIds.clear();
   }
 
-  applyStatusToSelection(status: ProductStatus): void {
+  async applyStatusToSelection(status: ProductStatus): Promise<void> {
     if (!this.hasSelection) return;
-    this.vendorProductService.updateStatus([...this.selectedIds], status);
-    this.notificationService.success('Statut mis à jour.');
-    this.refresh();
+    try {
+      await this.vendorProductService.updateStatus([...this.selectedIds], status);
+      this.notificationService.success('Statut mis à jour.');
+      await this.reloadFromApi();
+    } catch (e) {
+      this.handleWriteError(e);
+    }
   }
 
-  increaseStockSelection(): void {
+  async increaseStockSelection(): Promise<void> {
     if (!this.hasSelection) return;
-    this.vendorProductService.adjustStock([...this.selectedIds], 5);
-    this.notificationService.success('Stock augmenté (+5).');
-    this.refresh();
+    try {
+      await this.vendorProductService.adjustStock([...this.selectedIds], 5);
+      this.notificationService.success('Stock augmenté (+5).');
+      await this.reloadFromApi();
+    } catch (e) {
+      this.handleWriteError(e);
+    }
   }
 
-  applyDiscountSelection(): void {
+  async applyDiscountSelection(): Promise<void> {
     if (!this.hasSelection) return;
-    this.vendorProductService.adjustPricePercent([...this.selectedIds], -10);
-    this.notificationService.success('Remise de 10% appliquée.');
-    this.refresh();
+    try {
+      await this.vendorProductService.adjustPricePercent([...this.selectedIds], -10);
+      this.notificationService.success('Remise de 10% appliquée.');
+      await this.reloadFromApi();
+    } catch (e) {
+      this.handleWriteError(e);
+    }
   }
 
-  async delete(id: number, productName: string): Promise<void> {
+  private handleWriteError(e: unknown): void {
+    const msg = e instanceof Error ? e.message : 'Action impossible';
+    if (msg.includes('VENDOR_PENDING') || msg.includes('approbation')) {
+      this.notificationService.error('Compte en attente d’approbation : vous ne pouvez pas modifier le catalogue.');
+      return;
+    }
+    if (msg.includes('VENDOR_REJECTED') || msg.includes('refusé')) {
+      this.notificationService.error('Compte vendeur refusé.');
+      return;
+    }
+    this.notificationService.error(msg);
+  }
+
+  async delete(id: string, productName: string): Promise<void> {
     const result = await this.confirmDialog.openDialog(
       'Supprimer le produit',
       `Êtes-vous sûr de vouloir supprimer "${productName}" ? Cette action est irréversible.`
     );
 
     if (result) {
-      this.vendorProductService.remove(id);
-      this.refresh();
-      this.selectedIds.delete(id);
-      this.notificationService.success(`"${productName}" a été supprimé.`);
+      try {
+        await this.vendorProductService.remove(id);
+        this.selectedIds.delete(id);
+        await this.reloadFromApi();
+        this.notificationService.success(`"${productName}" a été supprimé.`);
+      } catch (e) {
+        this.handleWriteError(e);
+      }
     }
   }
 }

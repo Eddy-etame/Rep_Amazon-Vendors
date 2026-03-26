@@ -1,0 +1,54 @@
+<section class="card">
+  <h1>Inscription vendeur</h1>
+  <p>Créez votre compte vendeur pour vendre sur Amaz.</p>
+
+  <form class="form">
+    <label>
+      Nom complet
+      <input [(ngModel)]="name" name="name" type="text" placeholder="Votre nom" />
+    </label>
+    <label>
+      Adresse e-mail
+      <input [(ngModel)]="email" name="email" type="email" placeholder="exemple@domaine.com" />
+    </label>
+    <label>
+      Mot de passe
+      <input [(ngModel)]="password" name="password" type="password" placeholder="Minimum 8 caractères" />
+    </label>
+    <label>
+      Téléphone (optionnel)
+      <input [(ngModel)]="phone" name="phone" type="tel" placeholder="+33 6 12 34 56 78" />
+    </label>
+    <label>
+      Nom de l'entreprise <span class="required">*</span>
+      <input [(ngModel)]="businessName" name="businessName" type="text" placeholder="Raison sociale" />
+    </label>
+    <label>
+      SIRET (optionnel)
+      <input [(ngModel)]="siret" name="siret" type="text" placeholder="14 chiffres" />
+    </label>
+    <label>
+      Adresse (optionnel)
+      <input [(ngModel)]="address" name="address" type="text" placeholder="Adresse du siège" />
+    </label>
+    <label>
+      N° TVA (optionnel)
+      <input [(ngModel)]="taxId" name="taxId" type="text" placeholder="FR12345678901" />
+    </label>
+    <label>
+      IBAN (optionnel)
+      <input [(ngModel)]="iban" name="iban" type="text" placeholder="FR76 1234 5678 90..." />
+    </label>
+
+    <button type="button" (click)="handleRegister()" [disabled]="!canSubmit()">
+      {{ loading ? 'Inscription...' : 'Créer mon compte vendeur' }}
+    </button>
+
+    <p class="form-error" [hidden]="!registerError">{{ registerError }}</p>
+  </form>
+
+  <div class="helper">
+    <span>Déjà inscrit ?</span>
+    <a routerLink="/seller/login">Se connecter</a>
+  </div>
+</section>

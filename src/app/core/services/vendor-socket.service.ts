@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 
 import { environment } from '../../../environments/environment';
+import { VendorSessionStore } from './vendor-session.store';
 
 type SocketEventHandler = (payload: unknown) => void;
 
@@ -17,6 +18,8 @@ type IoFactory = (url: string, opts?: Record<string, unknown>) => SocketClientLi
 @Injectable({ providedIn: 'root' })
 export class VendorSocketService {
   private socket: SocketClientLike | null = null;
+
+  constructor(private readonly vendorSession: VendorSessionStore) {}
   private loaderPromise: Promise<IoFactory | null> | null = null;
 
   private async resolveIoFactory(): Promise<IoFactory | null> {
@@ -55,7 +58,10 @@ export class VendorSocketService {
     }
 
     const namespace = environment.socketNamespace?.trim() ?? '';
-    const vendorUserId = environment.vendorSocketUserId?.trim() || 'vendor_demo_01';
+    const vendorUserId =
+      this.vendorSession.vendorId ||
+      environment.vendorSocketUserId?.trim() ||
+      'vendor_demo_01';
     try {
       this.socket = ioFactory(`${baseUrl}${namespace}`, {
         transports: ['websocket'],

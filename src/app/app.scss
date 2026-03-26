@@ -24,3 +24,24 @@
 .links a:hover::after {
   transform: scaleX(1);
 }
+
+.nav-marketplace {
+  margin-left: auto;
+  color: var(--amaz-accent, #f97316);
+}
+
+.nav-logout {
+  background: transparent;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  color: #94a3b8;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.nav-logout:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #fca5a5;
+}
