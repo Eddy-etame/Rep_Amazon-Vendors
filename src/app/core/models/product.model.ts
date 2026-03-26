@@ -1,7 +1,7 @@
 export type ProductStatus = 'draft' | 'published' | 'archived';
 
 export interface Product {
-  id: number;
+  id: string;
   sku: string;
   name: string;
   price: number;

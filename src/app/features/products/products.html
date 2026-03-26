@@ -7,6 +7,8 @@
     <a routerLink="/seller/product/new" class="btn-primary-link">+ Ajouter un produit</a>
   </header>
 
+  <p *ngIf="loading" class="loading-hint">Chargement du catalogue…</p>
+
   <div class="filters-bar">
     <input
       type="search"

@@ -2,6 +2,10 @@ import { Injectable } from '@angular/core';
 
 import { VendorReturnRequest, VendorReturnStatus } from '../models/vendor-return.model';
 
+/**
+ * Mock/demo returns service using localStorage.
+ * Replace with real API calls when backend vendor returns endpoints exist.
+ */
 const KEY = 'vendor_returns';
 
 @Injectable({ providedIn: 'root' })

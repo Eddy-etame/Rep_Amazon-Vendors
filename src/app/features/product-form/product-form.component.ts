@@ -15,10 +15,11 @@ import { Product, ProductStatus } from '../../core/models/product.model';
 })
 export class ProductFormComponent implements OnInit {
   form!: FormGroup;
-  productId: number | null = null;
+  productId: string | null = null;
   isEditMode = false;
   submitted = false;
   imagePreview: string | null = null;
+  loading = false;
   readonly statusOptions: ProductStatus[] = ['published', 'draft', 'archived'];
 
   constructor(
@@ -32,11 +33,12 @@ export class ProductFormComponent implements OnInit {
   ngOnInit(): void {
     this.initForm();
 
-    this.route.params.subscribe(params => {
-      if (params['id']) {
-        this.productId = Number(params['id']);
+    this.route.params.subscribe((params) => {
+      const rawId = params['id'];
+      if (rawId) {
+        this.productId = String(rawId);
         this.isEditMode = true;
-        this.loadProduct(this.productId);
+        void this.loadProduct(this.productId);
       }
     });
   }
@@ -56,25 +58,35 @@ export class ProductFormComponent implements OnInit {
     });
   }
 
-  private loadProduct(id: number): void {
-    const p = this.vendorProductService.getById(id);
-    if (!p) {
-      this.router.navigate(['/seller/products']);
-      return;
+  private async loadProduct(id: string): Promise<void> {
+    this.loading = true;
+    try {
+      await this.vendorProductService.loadAll();
+      let p = this.vendorProductService.getById(id);
+      if (!p) {
+        p = await this.vendorProductService.fetchOne(id);
+      }
+      if (!p) {
+        this.notificationService.error('Produit introuvable');
+        await this.router.navigate(['/seller/products']);
+        return;
+      }
+      this.form.patchValue({
+        sku: p.sku,
+        name: p.name,
+        price: p.price,
+        stock: p.stock,
+        lowStockThreshold: p.lowStockThreshold,
+        category: p.category,
+        status: p.status,
+        image: p.image ?? '',
+        gallery: (p.gallery ?? []).join('\n'),
+        description: p.description ?? ''
+      });
+      this.imagePreview = p.image ?? null;
+    } finally {
+      this.loading = false;
     }
-    this.form.patchValue({
-      sku: p.sku,
-      name: p.name,
-      price: p.price,
-      stock: p.stock,
-      lowStockThreshold: p.lowStockThreshold,
-      category: p.category,
-      status: p.status,
-      image: p.image ?? '',
-      gallery: (p.gallery ?? []).join('\n'),
-      description: p.description ?? ''
-    });
-    this.imagePreview = p.image ?? null;
   }
 
   get f() {
@@ -87,9 +99,8 @@ export class ProductFormComponent implements OnInit {
 
     if (!file) return;
 
-    // Vérifier la taille (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      this.notificationService.error('L\'image doit faire moins de 5MB');
+      this.notificationService.error("L'image doit faire moins de 5MB");
       return;
     }
 
@@ -119,7 +130,7 @@ export class ProductFormComponent implements OnInit {
     return [...new Set(raw.split(/\r?\n|,/).map((v) => v.trim()).filter(Boolean))];
   }
 
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
     this.submitted = true;
     if (this.form.invalid) return;
 
@@ -137,18 +148,30 @@ export class ProductFormComponent implements OnInit {
       description: (this.f['description'].value || '').trim()
     } as Omit<Product, 'id' | 'createdAt' | 'updatedAt'>;
 
-    if (this.isEditMode && this.productId !== null) {
-      this.vendorProductService.update(this.productId, payload);
-      this.notificationService.success('Produit modifié avec succès');
-    } else {
-      this.vendorProductService.create(payload);
-      this.notificationService.success('Produit ajouté avec succès');
+    try {
+      if (this.isEditMode && this.productId !== null) {
+        await this.vendorProductService.update(this.productId, payload);
+        this.notificationService.success('Produit modifié avec succès');
+      } else {
+        await this.vendorProductService.create(payload);
+        this.notificationService.success('Produit ajouté avec succès');
+      }
+      await this.router.navigate(['/seller/products']);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Erreur';
+      if (msg.includes('VENDOR_PENDING') || msg.includes('approbation')) {
+        this.notificationService.error('Compte en attente d’approbation : publication impossible pour l’instant.');
+        return;
+      }
+      if (msg.includes('VENDOR_REJECTED')) {
+        this.notificationService.error('Compte vendeur refusé.');
+        return;
+      }
+      this.notificationService.error(msg);
     }
-
-    this.router.navigate(['/seller/products']);
   }
 
   onCancel(): void {
-    this.router.navigate(['/seller/products']);
+    void this.router.navigate(['/seller/products']);
   }
 }

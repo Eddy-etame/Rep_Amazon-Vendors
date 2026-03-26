@@ -5,12 +5,18 @@
   </div>
 
   <div class="links">
-    <a routerLink="/seller/dashboard" routerLinkActive="active">Dashboard</a>
-    <a routerLink="/seller/products" routerLinkActive="active">Mes produits</a>
-    <a routerLink="/seller/orders" routerLinkActive="active">Commandes</a>
-    <a routerLink="/seller/returns" routerLinkActive="active">Retours</a>
-    <a routerLink="/seller/messages" routerLinkActive="active">Messages</a>
-    <a routerLink="/seller/product/new" routerLinkActive="active">Ajouter</a>
+    @if (isAuthenticated) {
+      <a routerLink="/seller/dashboard" routerLinkActive="active">Dashboard</a>
+      <a routerLink="/seller/products" routerLinkActive="active">Mes produits</a>
+      <a routerLink="/seller/orders" routerLinkActive="active">Commandes</a>
+      <a routerLink="/seller/returns" routerLinkActive="active">Retours</a>
+      <a routerLink="/seller/messages" routerLinkActive="active">Messages</a>
+      <a routerLink="/seller/product/new" routerLinkActive="active">Ajouter</a>
+    }
+    <a href="http://localhost:4200" target="_self" class="nav-marketplace">Retour au marketplace</a>
+    @if (isAuthenticated) {
+      <button type="button" class="nav-logout" (click)="logout()">Déconnexion</button>
+    }
   </div>
 </nav>
 

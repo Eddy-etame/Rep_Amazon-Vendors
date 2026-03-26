@@ -10,6 +10,7 @@ import {
   VendorConversationService
 } from '../../core/services/vendor-conversation.service';
 import { VendorMessagingApiService } from '../../core/services/vendor-messaging-api.service';
+import { VendorSessionStore } from '../../core/services/vendor-session.store';
 import { VendorSocketService } from '../../core/services/vendor-socket.service';
 
 @Component({
@@ -23,8 +24,14 @@ export class Messages implements OnInit, OnDestroy {
   conversations: VendorConversation[] = [];
   selectedConversationId: string | null = null;
   replyDraft = '';
-  private readonly vendorId = 'vendor_demo_01';
-  private readonly vendorName = 'Amaz Vendor';
+
+  private get vendorId(): string {
+    return this.vendorSession.vendorId || 'vendor_demo_01';
+  }
+
+  private get vendorName(): string {
+    return this.vendorSession.vendorName || 'Amaz Vendor';
+  }
 
   private readonly socketHandler = (payload: unknown) => {
     const incoming = payload as Partial<IncomingSocketMessage>;
@@ -58,11 +65,13 @@ export class Messages implements OnInit, OnDestroy {
     private readonly conversationsService: VendorConversationService,
     private readonly notifications: NotificationService,
     private readonly socketService: VendorSocketService,
+    private readonly vendorSession: VendorSessionStore,
     private readonly messagingApi: VendorMessagingApiService
   ) {}
 
-  ngOnInit(): void {
-    this.conversationsService.seedIfEmpty();
+  async ngOnInit(): Promise<void> {
+    await this.vendorSession.load();
+    this.conversationsService.seedIfEmpty(this.vendorId, this.vendorName);
     this.refresh();
     if (!this.selectedConversationId && this.conversations.length > 0) {
       this.selectConversation(this.conversations[0].id);

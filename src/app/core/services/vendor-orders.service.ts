@@ -2,6 +2,10 @@ import { Injectable } from '@angular/core';
 
 import { VendorOrder, VendorOrderItem, VendorOrderStatus } from '../models/vendor-order.model';
 
+/**
+ * Mock/demo orders service using localStorage.
+ * Replace with real API calls when backend vendor orders endpoints exist.
+ */
 const KEY = 'vendor_orders';
 
 @Injectable({ providedIn: 'root' })
