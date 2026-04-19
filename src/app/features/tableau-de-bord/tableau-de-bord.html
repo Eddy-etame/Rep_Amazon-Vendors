@@ -1,0 +1,116 @@
+<section class="dashboard-page">
+  <header class="dashboard-header">
+    <div>
+      <p class="dashboard-header__eyebrow">Poste de pilotage</p>
+      <h1>Tableau de bord vendeur</h1>
+      <p>Indicateurs, alertes et raccourcis prioritaires.</p>
+    </div>
+    <a routerLink="/vendeur/produit/nouveau" class="dashboard-header__cta">Ajouter un produit</a>
+  </header>
+
+  @if (dashboardLoading) {
+    <div class="dashboard-banner" role="status">
+      <strong>Chargement.</strong>
+      Chargement des indicateurs...
+    </div>
+  }
+
+  @if (sessionProfileMissing) {
+    <div class="dashboard-banner dashboard-banner--warn" role="alert">
+      <strong>Session incomplète.</strong>
+      Impossible de charger le profil vendeur. Vérifiez votre connexion et reconnectez-vous.
+      <a routerLink="/vendeur/connexion">Se reconnecter</a>
+    </div>
+  }
+
+  @if (productsLoadError) {
+    <div class="dashboard-banner dashboard-banner--error" role="alert">
+      <strong>Catalogue.</strong>
+      {{ productsLoadError }}
+    </div>
+  }
+
+  @if (ordersLoadError) {
+    <div class="dashboard-banner dashboard-banner--error" role="alert">
+      <strong>Commandes.</strong>
+      {{ ordersLoadError }}
+    </div>
+  }
+
+  @if (messagesLoadError) {
+    <div class="dashboard-banner dashboard-banner--error" role="alert">
+      <strong>Messagerie.</strong>
+      {{ messagesLoadError }}
+    </div>
+  }
+
+  @if (returnsLoadError) {
+    <div class="dashboard-banner dashboard-banner--error" role="alert">
+      <strong>Retours.</strong>
+      {{ returnsLoadError }}
+    </div>
+  }
+
+  <div class="kpi-grid">
+    <a routerLink="/vendeur/produits" class="kpi-card">
+      <p class="kpi-label">Produits actifs</p>
+      <p class="kpi-value">{{ activeProductsCount }}</p>
+      <p class="kpi-meta">Catalogue vendeur</p>
+    </a>
+    <a routerLink="/vendeur/produits" [queryParams]="{ stock: 'low' }" class="kpi-card warning">
+      <p class="kpi-label">Stock faible</p>
+      <p class="kpi-value">{{ lowStockCount }}</p>
+      <p class="kpi-meta">Produits à surveiller</p>
+    </a>
+    <a routerLink="/vendeur/messagerie" class="kpi-card" [class.kpi-card--degraded]="!!messagesLoadError">
+      <p class="kpi-label">Messages non lus</p>
+      <p class="kpi-value">{{ messagesLoadError ? '--' : unreadMessagesCount }}</p>
+      <p class="kpi-meta">{{ messagesLoadError ? 'Messagerie dégradée' : 'Boîte de réception' }}</p>
+    </a>
+    <a
+      routerLink="/vendeur/commandes"
+      [queryParams]="{ status: 'in_progress' }"
+      class="kpi-card"
+      [class.kpi-card--degraded]="!!ordersLoadError"
+    >
+      <p class="kpi-label">Commandes en cours</p>
+      <p class="kpi-value">{{ ordersLoadError ? '--' : pendingOrdersCount }}</p>
+      <p class="kpi-meta">{{ ordersLoadError ? 'Flux dégradé' : 'Préparation et expédition' }}</p>
+    </a>
+    <a
+      routerLink="/vendeur/retours"
+      [queryParams]="{ status: 'active' }"
+      class="kpi-card"
+      [class.kpi-card--degraded]="!!returnsLoadError"
+    >
+      <p class="kpi-label">Retours ouverts</p>
+      <p class="kpi-value">{{ returnsLoadError ? '--' : openReturns }}</p>
+      <p class="kpi-meta">{{ returnsLoadError ? 'Flux dégradé' : 'À traiter' }}</p>
+    </a>
+  </div>
+
+  <section class="dashboard-row">
+    <article class="panel">
+      <h2>Actions rapides</h2>
+      <div class="quick-actions">
+        <a routerLink="/vendeur/produit/nouveau" class="qa-btn">Ajouter un produit</a>
+        <a routerLink="/vendeur/produits" class="qa-btn">Gérer le catalogue</a>
+        <a routerLink="/vendeur/commandes" class="qa-btn">Voir les commandes</a>
+        <a routerLink="/vendeur/retours" class="qa-btn">Traiter les retours</a>
+        <a routerLink="/vendeur/messagerie" class="qa-btn">Ouvrir la messagerie</a>
+      </div>
+    </article>
+
+    <article class="panel">
+      <h2>Santé du catalogue</h2>
+      <ul class="health-list">
+        <li>Images manquantes: <strong>{{ missingImageCount }}</strong></li>
+        <li>Descriptions trop courtes: <strong>{{ weakDescriptionCount }}</strong></li>
+        <li>Produits en rupture: <strong>{{ outOfStockCount }}</strong></li>
+      </ul>
+      <p class="health-summary">
+        Total points à corriger: <strong>{{ healthIssuesCount }}</strong>
+      </p>
+    </article>
+  </section>
+</section>
