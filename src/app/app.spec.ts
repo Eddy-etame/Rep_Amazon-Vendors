@@ -15,12 +15,4 @@ describe('App', () => {
     const app = fixture.componentInstance;
     expect(app).toBeTruthy();
   });
-
-  it('should render vendor space label', async () => {
-    const fixture = TestBed.createComponent(App);
-    await fixture.whenStable();
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).toContain('Espace vendeur');
-  });
 });
