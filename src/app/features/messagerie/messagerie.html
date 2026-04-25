@@ -1,0 +1,96 @@
+<section class="messages-page">
+  <header class="messages-header">
+    <div>
+      <p class="messages-header__eyebrow">Support client</p>
+      <h2>Messagerie acheteurs-vendeur</h2>
+      <p>Répondez aux conversations réelles chargées depuis l'API et synchronisées par socket.</p>
+    </div>
+  </header>
+
+  <div class="messages-banner messages-banner--error" *ngIf="loadError" role="alert">
+    <strong>Messagerie indisponible.</strong> {{ loadError }}
+  </div>
+
+  <p class="messages-state" *ngIf="loading">Chargement des conversations...</p>
+
+  <div class="messages-layout" *ngIf="!loading && conversations.length > 0; else emptyState">
+    <aside class="conversation-list">
+      <button
+        type="button"
+        class="conversation-item"
+        *ngFor="let conv of conversations; trackBy: trackByConversation"
+        [class.selected]="conv.id === selectedConversationId"
+        (click)="selectConversation(conv.id)"
+      >
+        <div class="conversation-top">
+          <strong>{{ conv.userName }}</strong>
+          <span class="timestamp">{{ conv.lastMessageAt | date:'shortTime' }}</span>
+        </div>
+        <p class="subject">{{ conv.subject }}</p>
+        <p class="meta">
+          <span *ngIf="conv.productTitle">Produit: {{ conv.productTitle }}</span>
+          <span *ngIf="conv.orderId">Commande: {{ conv.orderId }}</span>
+        </p>
+        <span class="unread-badge" *ngIf="unreadFor(conv) > 0">{{ unreadFor(conv) }}</span>
+      </button>
+    </aside>
+
+    <section class="thread" *ngIf="selectedConversation as active">
+      <header class="thread-header">
+        <div>
+          <p class="thread-header__eyebrow">Conversation</p>
+          <h3>{{ active.userName }}</h3>
+          <p>{{ active.subject }}</p>
+        </div>
+        <div class="thread-header__meta">
+          <span *ngIf="active.productTitle">Produit: {{ active.productTitle }}</span>
+          <span *ngIf="active.orderId">Commande: {{ active.orderId }}</span>
+        </div>
+      </header>
+
+      <div class="messages-banner messages-banner--error" *ngIf="threadError" role="alert">
+        <strong>Fil indisponible.</strong> {{ threadError }}
+      </div>
+
+      <p class="messages-state" *ngIf="threadLoading">Chargement du fil...</p>
+
+      <div class="thread-messages" *ngIf="!threadLoading">
+        <article
+          *ngFor="let msg of active.messages"
+          class="bubble"
+          [ngClass]="msg.senderRole === 'vendor' ? 'bubble-vendor' : 'bubble-user'"
+        >
+          <p class="bubble-meta">
+            {{ msg.senderName }} · {{ msg.sentAt | date:'short' }}
+          </p>
+          <p class="bubble-content">{{ msg.content }}</p>
+        </article>
+
+        <p class="thread-empty" *ngIf="active.messages.length === 0">
+          Aucun message détaillé pour ce fil pour le moment.
+        </p>
+      </div>
+
+      <form class="reply-form" (ngSubmit)="sendReply()">
+        <label for="replyDraft">Répondre</label>
+        <textarea
+          id="replyDraft"
+          name="replyDraft"
+          [(ngModel)]="replyDraft"
+          rows="3"
+          [disabled]="sendPending"
+          placeholder="Écrire un message..."
+        ></textarea>
+        <button type="submit" [disabled]="sendPending">
+          {{ sendPending ? 'Envoi...' : 'Envoyer' }}
+        </button>
+      </form>
+    </section>
+  </div>
+</section>
+
+<ng-template #emptyState>
+  <p class="empty-state" *ngIf="!loading">
+    {{ loadError ? 'Impossible d\'afficher la messagerie tant que l\'API reste indisponible.' : 'Aucune conversation pour le moment.' }}
+  </p>
+</ng-template>

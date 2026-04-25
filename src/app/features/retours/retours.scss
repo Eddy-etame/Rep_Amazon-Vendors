@@ -1,0 +1,233 @@
+.returns-page {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.returns-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.returns-header__eyebrow,
+.detail-kicker {
+  margin: 0 0 0.35rem;
+  color: var(--amaz-color-text-muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.returns-header h2 {
+  margin: 0 0 0.35rem;
+  color: var(--amaz-color-text);
+}
+
+.returns-header p {
+  margin: 0;
+  color: var(--amaz-color-text-muted);
+}
+
+.returns-banner,
+.returns-state {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--amaz-color-border);
+  background: var(--amaz-color-surface);
+  color: var(--amaz-color-text);
+}
+
+.returns-banner--error {
+  border-color: color-mix(in srgb, var(--amaz-color-danger) 45%, var(--amaz-color-border));
+  background: color-mix(in srgb, var(--amaz-color-danger) 12%, var(--amaz-color-surface));
+}
+
+.returns-filters {
+  display: grid;
+  grid-template-columns: 1.5fr 220px;
+  gap: 0.55rem;
+}
+
+.returns-filters input,
+.returns-filters select {
+  border: 1px solid var(--amaz-color-border);
+  border-radius: 0.6rem;
+  padding: 0.55rem 0.65rem;
+  background: var(--amaz-color-surface);
+  color: var(--amaz-color-text);
+}
+
+.returns-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 0.85rem;
+}
+
+.returns-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.return-item {
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--amaz-color-border);
+  border-radius: 0.8rem;
+  background: var(--amaz-color-surface);
+  color: var(--amaz-color-text);
+  padding: 0.65rem;
+}
+
+.return-item.selected {
+  border-color: color-mix(in srgb, var(--amaz-color-accent) 70%, var(--amaz-color-border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--amaz-color-accent) 35%, transparent);
+}
+
+.return-item p {
+  margin: 0.2rem 0 0;
+  color: var(--amaz-color-text-muted);
+  font-size: 0.84rem;
+}
+
+.return-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.status {
+  border-radius: 999px;
+  padding: 0.18rem 0.55rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.status.open {
+  background: rgba(234, 179, 8, 0.2);
+  color: #fde68a;
+}
+
+.status.approved {
+  background: rgba(22, 163, 74, 0.2);
+  color: #86efac;
+}
+
+.status.rejected {
+  background: rgba(220, 38, 38, 0.2);
+  color: #fca5a5;
+}
+
+.status.received {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+}
+
+.status.refunded {
+  background: color-mix(in srgb, var(--amaz-color-accent) 18%, transparent);
+  color: #fdba74;
+}
+
+.return-detail {
+  border: 1px solid var(--amaz-color-border);
+  border-radius: 0.9rem;
+  background: var(--amaz-color-surface);
+  padding: 1rem;
+}
+
+.detail-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.detail-top h3 {
+  margin: 0;
+}
+
+.meta-grid {
+  margin-top: 0.8rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem 0.9rem;
+}
+
+.meta-grid p,
+.reason {
+  margin: 0;
+  color: var(--amaz-color-text-muted);
+}
+
+h4 {
+  margin: 0.8rem 0 0.35rem;
+  color: var(--amaz-color-text);
+}
+
+.items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.items li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.55rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--amaz-color-border) 75%, transparent);
+  color: var(--amaz-color-text);
+}
+
+.status-actions {
+  margin-top: 0.75rem;
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.status-actions button {
+  border-radius: 999px;
+  border: 1px solid var(--amaz-color-border);
+  background: var(--amaz-color-surface-elevated);
+  color: var(--amaz-color-text);
+  padding: 0.38rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.status-actions button:hover {
+  border-color: var(--amaz-color-accent);
+  color: var(--amaz-color-accent);
+}
+
+.status-actions button:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+.empty {
+  color: var(--amaz-color-text-muted);
+}
+
+@media (max-width: 920px) {
+  .returns-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .returns-filters {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .meta-grid {
+    grid-template-columns: 1fr;
+  }
+}
