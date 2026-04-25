@@ -1,3 +1,101 @@
+<<<<<<< HEAD
 <router-outlet></router-outlet>
 <app-navbar></app-navbar>
 <app-footer></app-footer>
+=======
+<div class="seller-shell" [class.seller-shell--public]="!isAuthenticated">
+  <header class="seller-topbar">
+    <div class="seller-brand">
+      <span class="seller-brand__main">Amaz</span>
+      <span class="seller-brand__sub">Workspace vendeur</span>
+    </div>
+
+    <div class="seller-topbar__actions">
+      <div class="theme-switcher" aria-label="Apparence">
+        <span class="theme-switcher__label">Thème</span>
+        <div class="theme-switcher__group" role="group" aria-label="Sélection du thème">
+          <button
+            type="button"
+            [class.active]="currentThemePreference === 'system'"
+            (click)="setThemePreference('system')"
+          >
+            Système
+          </button>
+          <button
+            type="button"
+            [class.active]="currentThemePreference === 'light'"
+            (click)="setThemePreference('light')"
+          >
+            Clair
+          </button>
+          <button
+            type="button"
+            [class.active]="currentThemePreference === 'dark'"
+            (click)="setThemePreference('dark')"
+          >
+            Sombre
+          </button>
+        </div>
+      </div>
+
+      <a [href]="usersAppUrl" target="_self" class="seller-marketplace-link">Place de marché</a>
+
+      @if (isAuthenticated) {
+        <button type="button" class="seller-logout" (click)="logout()">Déconnexion</button>
+      }
+    </div>
+  </header>
+
+  @if (isAuthenticated) {
+    <div class="seller-layout">
+      <aside class="seller-sidebar">
+        <section class="seller-card">
+          <p class="seller-card__eyebrow">Compte vendeur</p>
+          <h2>{{ vendorName }}</h2>
+          <p class="seller-card__meta">{{ vendorId }}</p>
+        </section>
+
+        <nav class="seller-nav" aria-label="Navigation vendeur">
+          @for (item of navItems; track item.route) {
+            <a [routerLink]="item.route" routerLinkActive="active">{{ item.label }}</a>
+          }
+        </nav>
+
+        <a routerLink="/vendeur/produit/nouveau" class="seller-sidebar__cta">+ Ajouter un produit</a>
+      </aside>
+
+      <section class="seller-workspace">
+        <header class="workspace-header">
+          <div>
+            <p class="workspace-header__eyebrow">Amaz Vendeur</p>
+            <h1>{{ sectionTitle }}</h1>
+            <p>{{ sectionDescription }}</p>
+          </div>
+          <a [href]="usersAppUrl" target="_self" class="workspace-header__link">Retour à la place de marché</a>
+        </header>
+
+        <main class="seller-main">
+          <router-outlet></router-outlet>
+        </main>
+      </section>
+    </div>
+  } @else {
+    <main class="seller-auth-shell">
+      <section class="seller-auth-card">
+        <div class="seller-auth-copy">
+          <p class="workspace-header__eyebrow">Amaz Vendeur</p>
+          <h1>{{ sectionTitle }}</h1>
+          <p>{{ sectionDescription }}</p>
+        </div>
+
+        <div class="seller-auth-content">
+          <router-outlet></router-outlet>
+        </div>
+      </section>
+    </main>
+  }
+</div>
+
+<app-notifications></app-notifications>
+<app-dialogue-confirmation></app-dialogue-confirmation>
+>>>>>>> 49515eb1b28cc627a1eb93ea47fa305c37a0dc57
