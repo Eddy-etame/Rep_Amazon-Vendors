@@ -1,0 +1,111 @@
+/**
+ * Shared semantic design tokens for `users` and `vendors` Angular apps.
+ * - Default: dark palette (current storefront look).
+ * - `prefers-color-scheme: light`: light palette.
+ * - Optional: `document.documentElement.dataset.theme = 'light' | 'dark'` to override OS preference.
+ */
+
+@mixin amaz-tokens-dark {
+  color-scheme: dark;
+
+  --amaz-font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --amaz-font-body: 'DM Sans', system-ui, -apple-system, sans-serif;
+
+  --amaz-text-xs: 0.75rem;
+  --amaz-text-sm: 0.875rem;
+  --amaz-text-base: 1rem;
+  --amaz-text-lg: 1.125rem;
+  --amaz-text-xl: 1.25rem;
+  --amaz-text-2xl: 1.5rem;
+  --amaz-text-3xl: 1.875rem;
+  --amaz-text-4xl: 2.25rem;
+  --amaz-text-5xl: clamp(2rem, 5vw, 3rem);
+
+  --amaz-section-y: clamp(2rem, 5vw, 3.5rem);
+  --amaz-section-y-tight: clamp(1.25rem, 3vw, 2rem);
+
+  --amaz-color-bg: #000000;
+  --amaz-color-surface: #020617;
+  --amaz-color-surface-elevated: #0f172a;
+  --amaz-color-border: rgba(148, 163, 184, 0.45);
+  --amaz-color-text: #f9fafb;
+  --amaz-color-text-muted: #94a3b8;
+  --amaz-color-accent: #f97316;
+  --amaz-color-accent-hover: #fb923c;
+  --amaz-color-success: #86efac;
+  --amaz-color-danger: #fca5a5;
+  --amaz-color-info: #93c5fd;
+
+  --amaz-radius-sm: 6px;
+  --amaz-radius-md: 10px;
+  --amaz-radius-lg: 1rem;
+  --amaz-space-1: 0.25rem;
+  --amaz-space-2: 0.5rem;
+  --amaz-space-3: 0.75rem;
+  --amaz-space-4: 1rem;
+  --amaz-shadow-card: 0 18px 40px rgba(15, 23, 42, 0.9);
+  --amaz-transition: 0.15s ease;
+  --amaz-focus-ring: 0 0 0 3px rgba(249, 115, 22, 0.45);
+}
+
+@mixin amaz-tokens-light {
+  color-scheme: light;
+
+  --amaz-font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --amaz-font-body: 'DM Sans', system-ui, -apple-system, sans-serif;
+
+  --amaz-text-xs: 0.75rem;
+  --amaz-text-sm: 0.875rem;
+  --amaz-text-base: 1rem;
+  --amaz-text-lg: 1.125rem;
+  --amaz-text-xl: 1.25rem;
+  --amaz-text-2xl: 1.5rem;
+  --amaz-text-3xl: 1.875rem;
+  --amaz-text-4xl: 2.25rem;
+  --amaz-text-5xl: clamp(2rem, 5vw, 3rem);
+
+  --amaz-section-y: clamp(2rem, 5vw, 3.5rem);
+  --amaz-section-y-tight: clamp(1.25rem, 3vw, 2rem);
+
+  --amaz-color-bg: #e5e2db;
+  --amaz-color-surface: #dee9e5;
+  --amaz-color-surface-elevated: #f4f3ef;
+  --amaz-color-border: rgba(17, 17, 17, 0.12);
+  --amaz-color-text: #111111;
+  --amaz-color-text-muted: #4b5563;
+  --amaz-color-accent: #ea580c;
+  --amaz-color-accent-hover: #f97316;
+  --amaz-color-success: #15803d;
+  --amaz-color-danger: #b91c1c;
+  --amaz-color-info: #1d4ed8;
+
+  --amaz-radius-sm: 6px;
+  --amaz-radius-md: 10px;
+  --amaz-radius-lg: 1rem;
+  --amaz-space-1: 0.25rem;
+  --amaz-space-2: 0.5rem;
+  --amaz-space-3: 0.75rem;
+  --amaz-space-4: 1rem;
+  --amaz-shadow-card: 0 18px 40px rgba(17, 17, 17, 0.08);
+  --amaz-transition: 0.15s ease;
+  --amaz-focus-ring: 0 0 0 3px rgba(234, 88, 12, 0.35);
+}
+
+/* OS preference: default dark; switch to light when user prefers light */
+:root:not([data-theme]) {
+  @include amaz-tokens-dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    @include amaz-tokens-light;
+  }
+}
+
+:root[data-theme='dark'] {
+  @include amaz-tokens-dark;
+}
+
+:root[data-theme='light'] {
+  @include amaz-tokens-light;
+}

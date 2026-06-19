@@ -1,4 +1,4 @@
-import { hoteDevServeur } from '../../../shared-frontend/hote-dev-serveur';
+import { hoteDevServeur } from '../shared-frontend/hote-dev-serveur';
 
 const h = hoteDevServeur();
 

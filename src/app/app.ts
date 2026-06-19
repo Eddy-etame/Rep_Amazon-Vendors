@@ -13,7 +13,7 @@ import { DepotSessionVendeur } from './core/services/depot-session-vendeur';
 import {
   ThemePreference,
   ServicePreferenceTheme
-} from '../../../shared-frontend/service-preference-theme';
+} from '../shared-frontend/service-preference-theme';
 
 interface SellerNavItem {
   route: string;
