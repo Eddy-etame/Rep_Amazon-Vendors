@@ -28,6 +28,9 @@ export class Messagerie implements OnInit, OnDestroy {
   threadError: string | null = null;
   sendPending = false;
 
+  // Handler temps réel : appelé à chaque 'message.new' reçu du serveur. On valide le payload,
+  // on ignore l'écho de nos propres messages, on fusionne le message dans la bonne conversation,
+  // puis on rafraîchit l'affichage (en marquant lu si la conversation est déjà ouverte).
   private readonly socketHandler = (payload: unknown) => {
     const incoming = payload as Partial<IncomingSocketMessage>;
     if (!incoming?.senderRole || !incoming.senderId || !incoming.content || !incoming.userId || !incoming.userName) {
@@ -68,6 +71,7 @@ export class Messagerie implements OnInit, OnDestroy {
     private readonly cdr: ChangeDetectorRef
   ) {}
 
+  // Au montage : on charge la session vendeur, la liste des conversations, puis on ouvre le socket.
   async ngOnInit(): Promise<void> {
     await this.vendorSession.load();
     if (!this.vendorSession.vendorId) {
@@ -81,6 +85,7 @@ export class Messagerie implements OnInit, OnDestroy {
     this.syncView();
   }
 
+  // Au démontage : on se désabonne du socket pour éviter les fuites mémoire et les doublons de handler.
   ngOnDestroy(): void {
     this.socketService.off('message.new', this.socketHandler);
   }
@@ -100,6 +105,7 @@ export class Messagerie implements OnInit, OnDestroy {
     return conversation.unreadCount;
   }
 
+  // Ouvre une conversation : charge ses messages via l'API et la marque comme lue.
   async selectConversation(conversationId: string): Promise<void> {
     this.selectedConversationId = conversationId;
     this.threadLoading = true;
@@ -118,6 +124,7 @@ export class Messagerie implements OnInit, OnDestroy {
     }
   }
 
+  // Envoie une réponse dans la conversation ouverte (POST via le service), puis vide le brouillon.
   async sendReply(): Promise<void> {
     const selected = this.selectedConversation;
     if (!selected) {
@@ -144,6 +151,8 @@ export class Messagerie implements OnInit, OnDestroy {
     }
   }
 
+  // Ouvre la connexion temps réel et s'abonne à 'message.new'. Si le socket échoue, la messagerie
+  // reste utilisable via l'API (chargement classique), simplement sans mise à jour instantanée.
   private async connectSocket(): Promise<void> {
     const connected = await this.socketService.connect();
     if (!connected) {
@@ -155,6 +164,7 @@ export class Messagerie implements OnInit, OnDestroy {
     this.syncView();
   }
 
+  // Charge la liste des conversations du vendeur (appel API).
   private async loadConversations(): Promise<void> {
     this.loading = true;
     this.loadError = null;
