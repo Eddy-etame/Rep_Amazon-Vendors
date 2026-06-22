@@ -1,3 +1,4 @@
+// Page INSCRIPTION VENDEUR : création d'un compte vendeur (service-auth-vendeur → /auth/register).
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';

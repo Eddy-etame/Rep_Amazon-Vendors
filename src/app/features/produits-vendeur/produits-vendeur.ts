@@ -1,3 +1,4 @@
+// Page PRODUITS VENDEUR : liste et édite le catalogue du vendeur (service-produit-vendeur).
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';

@@ -1,3 +1,4 @@
+// Page CONNEXION VENDEUR : login vendeur (service-auth-vendeur → /auth/login).
 import { ChangeDetectorRef, Component } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 

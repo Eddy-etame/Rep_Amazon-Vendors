@@ -1,3 +1,4 @@
+// Page COMMANDES VENDEUR : commandes reçues (filtrées aux articles du vendeur) + mise à jour du statut.
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';

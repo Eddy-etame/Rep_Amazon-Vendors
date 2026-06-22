@@ -1,3 +1,4 @@
+// Page TABLEAU DE BORD vendeur : vue d'ensemble (ventes, commandes récentes, raccourcis).
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';

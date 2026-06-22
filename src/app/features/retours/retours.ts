@@ -1,3 +1,4 @@
+// Page RETOURS vendeur : demandes de retour reçues + mise à jour du statut (service-retours-vendeur).
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';

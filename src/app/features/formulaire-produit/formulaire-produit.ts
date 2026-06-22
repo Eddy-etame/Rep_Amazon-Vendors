@@ -1,3 +1,4 @@
+// Page FORMULAIRE PRODUIT : créer/modifier un produit (POST/PUT /produits via service-produit-vendeur).
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
