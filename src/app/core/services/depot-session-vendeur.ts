@@ -1,3 +1,4 @@
+// Source de vérité de la SESSION VENDEUR (vendeur connecté, son vendorId, son rôle).
 import { Injectable, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 

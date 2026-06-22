@@ -1,3 +1,4 @@
+// Service produits VENDEUR (front) : CRUD du catalogue du vendeur via /produits (Bearer vendeur).
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';

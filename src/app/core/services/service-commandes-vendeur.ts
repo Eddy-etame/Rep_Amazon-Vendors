@@ -1,3 +1,4 @@
+// Service commandes VENDEUR (front) : liste les commandes reçues et met à jour leur statut (/commandes).
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';

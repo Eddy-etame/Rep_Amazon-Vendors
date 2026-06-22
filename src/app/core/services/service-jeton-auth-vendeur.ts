@@ -1,3 +1,4 @@
+// Service jeton VENDEUR : conserve le jeton Bearer du vendeur et le fournit à l'intercepteur.
 import { Injectable } from '@angular/core';
 
 const VENDOR_TOKEN_KEY = 'amaz_vendor_token';

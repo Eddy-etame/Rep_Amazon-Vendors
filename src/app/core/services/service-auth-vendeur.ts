@@ -1,3 +1,4 @@
+// Service d'authentification VENDEUR (front) : login/register vendeur via la gateway (/auth).
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, catchError, of, timeout } from 'rxjs';

@@ -1,3 +1,4 @@
+// Service retours VENDEUR (front) : liste les demandes de retour et met à jour leur statut (/retours).
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';

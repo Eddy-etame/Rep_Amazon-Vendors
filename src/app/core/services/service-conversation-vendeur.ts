@@ -1,3 +1,5 @@
+// Service conversations VENDEUR (front) : charge conversations/messages (REST) ; le temps réel passe
+// par service-socket-vendeur (WebSocket).
 import { Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 

@@ -1,3 +1,4 @@
+// Service API messagerie VENDEUR (front) : appels REST /messages et /messages/conversations.
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';

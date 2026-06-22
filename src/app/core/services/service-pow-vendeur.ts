@@ -1,3 +1,4 @@
+// Service Proof-of-Work VENDEUR : mine le nonce pour l'en-tête X-PoW-* des requêtes vendeur.
 import { Injectable } from '@angular/core';
 
 import { environment } from '../../../environments/environment';

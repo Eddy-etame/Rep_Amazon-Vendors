@@ -1,3 +1,4 @@
+// Service de notifications (front vendeur) : affiche des messages (toast) à l'utilisateur.
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 

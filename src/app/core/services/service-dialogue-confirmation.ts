@@ -1,3 +1,4 @@
+// Service de dialogue de confirmation (front vendeur) : ouvre une confirmation oui/non.
 import { Injectable } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
